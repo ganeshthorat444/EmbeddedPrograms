@@ -1,0 +1,1 @@
+cmd_/home/ganesh/gitTraining/LDD/hello.ko := ld -r -m elf_x86_64 -T /usr/src/linux-headers-3.13.0-117-generic/scripts/module-common.lds --build-id  -o /home/ganesh/gitTraining/LDD/hello.ko /home/ganesh/gitTraining/LDD/hello.o /home/ganesh/gitTraining/LDD/hello.mod.o
