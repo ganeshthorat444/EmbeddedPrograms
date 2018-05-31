@@ -1,3 +1,12 @@
+/*Written by Mr.Bruce Wayne(BATMAN).*/
+
+/*
+  Program will work as simulator for the socket server test 
+  1. Will create multiple sockets.
+  2. Can able to Send Continues data on IP:PORT
+  3. 
+*/
+
 #define _GNU_SOURC
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,9 +28,6 @@ struct Socket_data
 void Function1(void* param);
 void Function1(void* param)
 {
-	/* Now ask for a message from the user, this message
-	 * will be read by server
-	 */
 	//pthread_mutex_lock(&mutex1);
 	int n=0;
 	struct Socket_data* data =param;
@@ -30,7 +36,7 @@ void Function1(void* param)
 	char buffer[256];
 	bzero(buffer,256);
 	sprintf(buffer,"hi_%d_%d\n",threadID,SocketID);
-	//	printf("%s\r\n", buffer);
+	//printf("%s\r\n", buffer);
 	/* Send message to the server*/
 	while(1)
 	{
@@ -41,11 +47,17 @@ void Function1(void* param)
 			exit(1);
 		}
 		pthread_yield();
-	//	sleep(1);
+	//sleep(1);
 	}
 	//pthread_mutex_unlock(&mutex1);
 
 }
+
+
+/*MAIN
+Usage : 
+	./Program_name 	<IP> <PORT> <No of Sockets>
+*/
 
 int main(int argc, char *argv[]) 
 {
@@ -57,7 +69,7 @@ int main(int argc, char *argv[])
 	struct Socket_data* data = (struct Socket_data*)malloc(sizeof(struct Socket_data));
 
 	if (argc < 4) {
-		fprintf(stderr,"usage:  %s hostname port No_of_sockets\n", argv[0]);
+		fprintf(stderr,"usage:  %s <IP> <PORT> <No of Sockets>\n", argv[0]);
 		exit(0);
 	}
 
