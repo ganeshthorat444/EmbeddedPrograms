@@ -1,0 +1,126 @@
+https://www.raspberrypi.org/documentation/linux/kernel/building.md
+https://a-delacruz.github.io/ubuntu/rpi3-setup-64bit-uboot.html
+https://a-delacruz.github.io/ubuntu/rpi3-setup-64bit-kernel
+https://elinux.org/RPi_U-Boot
+
+
+sudo apt-get install git bc
+
+#Install Toolchain
+
+git clone https://github.com/raspberrypi/tools ~/tools
+ 
+#Clone main Source Code
+
+git clone --depth=1 https://github.com/raspberrypi/linux
+
+#Configuration for Raspberry PI3
+#Setup Path Environment
+
+echo PATH=\$PATH:~/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin >> ~/.bashrc
+source ~/.bashrc
+
+cd linux
+KERNEL=kernel7
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2709_defconfig
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs
+
+Which will build the 
+	zImage
+	modules
+	and Device Tree.
+
+
+
+## U-boot Build Procedure 
+
+# Getting Source
+	 git clone --depth 1 --branch v2017.11 git://git.denx.de/u-boot.git v2017.11
+
+# Getting Tools Required to cross compile
+	sudo apt-get install u-boot-tools
+	if not istalled raspberry-tools 
+		apt-get install gcc-aarch64-linux-gnu
+
+# Setting the Environment Variables
+	export CROSS_COMPILE=aarch64-linux-gnu-
+	
+	
+# Configuring the  u-boot for Raspberry
+	sudo make -C v2017.11/ CROSS_COMPILE=aarch64-linux-gnu- rpi_3_defconfig
+
+# Build  
+sudo make -C v2017.11/ CROSS_COMPILE=aarch64-linux-gnu- 
+
+
+
+#partitioning SD CARD 
+
+U-can use the utility called etcher 
+https://etcher.io/
+
+or else create the Partitions manually
+
+
+sudo fdisk -l 
+sudo fdisk /dev/sdb 
+	p -> print partitions
+	delete all partitions
+	n-> create new partition
+	p-> primary
+	enter to set default
+	enter the size required
+	create the partition flag W95 FAT32 LBA = c part 1
+	
+	repeat above step to create second partition
+
+	now need to create the file systems for these partitions
+	
+	$ sudo mkfs.vfat -F 32 -n "boot" /dev/sdb1
+	$ sudo mkfs.ext3 -L "root" /dev/sdb2
+
+$   wget http://cdimage.ubuntu.com/ubuntu-base/releases/17.10/release/ubuntu-base-17.10-base-arm64.tar.gz
+$   mkdir rootfs
+$   sudo tar xzvf ubuntu-base-16.04.3-base-arm64.tar.gz -C $HOME/rootfs
+
+$   cp -r $HOME/rootfs/* /media/ganesh/root/.
+
+
+
+
+Download the 2018-04-18-raspbian-stretch-lite.zip
+From https://www.raspberrypi.org/downloads/raspbian/
+
+start the etcher-electron 
+
+	echo "deb https://dl.bintray.com/resin-io/debian stable etcher" | sudo tee /etc/apt/sources.list.d/etcher.list
+	sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
+	sudo apt-get update
+	sudo apt-get install etcher-electron
+
+	etcher-electron 
+	
+	pass the 2018-04-18-raspbian-stretch-lite.zip and Mass_storage_drive details to this utility 
+	and click on flash 
+
+	after successful Flash replace the zImage created with kernel7.img and config.txt 
+
+
+ds1307: ds1307@68 {
+                                compatible = "maxim,ds1307";
+                                reg = <0x68>;
+                                status = "okay";
+                        };
+
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C /home/rasberry_pi_3b+/sources/linux M=`pwd` modules
+
+
+fatload mmc 0 ${kernel_addr_r} amit/zImage
+fatload mmc 0 0x2000000 amit/bcm2710-rpi-3-b-plus.dtb
+setenv bootargs console=ttyS0,115200n8 console=ttyAMA0,115200n8 console=tty0 root=/dev/mmcblk0p2 rootwait rw earlyprintk
+bootz ${kernel_addr_r} - 0x2000000
+Kernel image @ 0x080000 [ 0x000000 - 0x482b28 ]
+
+

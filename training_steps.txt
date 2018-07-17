@@ -1,0 +1,37 @@
+####Setup  create local repostory  
+ 2004  mkdir gitTraining 
+ 2010  cd gitTraining/
+ 2011  git init
+ 2012  git config --global user.name "Ganesh Thorat"
+ 2013  git config --global user.email "ganeshthorat444@gmail.com"
+####create files
+ 2014  vim abc.c
+ 2015  git status
+ 2016  git log
+####added to local repo
+ 2017  git add *.c
+ 2018  git log
+ 2019  git status
+####added to remote repo
+ 2020  git commit -m "First Commit test"
+ 2022  git remote add origin https://github.com/ganeshthorat444/ganesh_project.git
+ 2023  git remote
+ 2024  git status
+ 2025  git log
+####push all changes to remote branch
+ 2026  git push origin master
+ 2029  git status
+ 2030  git log
+ 
+####create new files and push on the same branch .
+ 2035  vim pqr.c
+ 2036  git status
+ 2037  git log
+ 2038  git add pqr.c
+ 2039  git log
+ 2040  git status
+ 2045  git push origin master
+ 2046  git status
+ 2047  git log
+ 2048  git commit -m "Second Commit Main"
+ 2049  git push origin master

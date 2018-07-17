@@ -1,0 +1,120 @@
+###############################Memory map
+
+Most registers in the CPU have well-defined values after power up, including the instruction pointer (EIP) which holds the memory address for the instruction being executed by the CPU. Intel CPUs use a hack whereby even though only 1MB of memory can be addressed at power up, a hidden base address (an offset, essentially) is applied to EIP so that the first instruction executed is at address 0xFFFFFFF0 (16 bytes short of the end of 4 gigs of memory and well above one megabyte). This magical address is called the RESET VECTOR and is standard for modern Intel CPUs.​
+
+The motherboard ensures that the instruction at the reset vector is a jump to the memory location mapped to the BIOS entry point. This jump implicitly clears the hidden base address present at power up. All of these memory locations have the right contents needed by the CPU . They are all mapped to flash memory containing the BIOS since at this point the RAM modules have random crap in them.
+
+
+###############################BIOS
+
+    When a system is first booted, or is reset, the processor executes code at a well-known location. In a personal computer (PC), this location is in the basic input/output system (BIOS), which is stored in flash memory on the motherboard. ​
+
+    In a PC, booting Linux begins in the BIOS at address 0xFFFF0. The first step of the BIOS is the power-on self test (POST). The job of the POST is to perform a check of the hardware. The second step of the BIOS is local device enumeration and initialization.​
+
+    Given the different uses of BIOS functions, the BIOS is made up of two parts: the POST code and runtime services. After the POST is complete, it is flushed from memory, but the BIOS runtime services remain and are available to the target operating system.​
+
+    To boot an operating system, the BIOS runtime searches for devices that are both active and bootable in the order of preference defined by the  (CMOS) settings. A boot device can be a floppy disk, a CD-ROM, a partition on a hard disk, a device on the network, or even a USB flash memory stick.​
+
+###############################MBR Image
+
+    ​
+
+    Commonly, Linux is booted from a hard disk, where the Master Boot Record (MBR) contains the primary boot loader. The MBR is a 512-byte sector, located in the first sector on the disk (sector 1 of cylinder 0, head 0). After the MBR is loaded into RAM, the BIOS yields control to it.  ​
+
+    The primary boot loader that resides in the MBR is a 512-byte image containing both program code and a small partition table (see Figure 2). The first 446 bytes are the primary boot loader, which contains both executable code and error message text. The next sixty-four bytes are the partition table, which contains a record for each of four partitions (sixteen bytes each). The MBR ends with two bytes that are defined as the magic number (0xAA55). The magic number serves as a validation check of the MBR. ​
+
+    The job of the primary boot loader is to find and load the secondary boot loader (stage 2). It does this by looking through the partition table for an active partition. When it finds an active partition, it scans the remaining partitions in the table to ensure that they're all inactive. When this is verified, the active partition's boot record is read from the device into RAM and executed​
+
+###############################GRUB
+    GRUB stands for Grand Unified Bootloader.​
+
+    If you have multiple kernel images installed on your system, you can choose which one to be executed.​
+
+    GRUB displays a splash screen, waits for few seconds, if you don’t enter anything, it loads the default kernel image as specified in the grub configuration file.​
+
+    GRUB has the knowledge of the filesystem (the older Linux loader LILO didn’t understand filesystem) ext2 and ext3.​
+
+    Grub configuration file is /boot/grub/grub.conf (/etc/grub.conf is a link to this)​
+
+
+###############################GRUB CONFIG
+    The secondary, or second-stage, boot loader could be more aptly called the kernel loader. The task at this stage is to load the Linux kernel and optional initial RAM disk.​
+
+    The first- and second-stage boot loaders combined are called Linux Loader (LILO) or GRand Unified Bootloader (GRUB) in the x86 PC environment. Because LILO has some disadvantages that were corrected in GRUB, let's look into GRUB.​
+
+    The great thing about GRUB is that it includes knowledge of Linux file systems. Instead of using raw sectors on the disk, as LILO does, GRUB can load a Linux kernel from an ext2 or ext3 file system. It does this by making the two-stage boot loader into a three-stage boot loader.​
+
+    Stage 1 (MBR) boots a stage 1.5 boot loader that understands the particular file system containing the Linux kernel image. Examples include reiserfs_stage1_5 (to load from a Reiser journaling file system) or e2fs_stage1_5 (to load from an ext2 or ext3 file system). When the stage 1.5 boot loader is loaded and running, the stage 2 boot loader can be loaded. ​
+
+
+####################################KERNEL1
+    With the kernel image in memory and control given from the stage 2 boot loader, the kernel stage begins. The kernel image isn't so much an executable kernel, but a compressed kernel image. Typically this is a zImage (compressed image, less than 512KB) or a bzImage (big compressed image, greater than 512KB), that has been previously compressed with zlib. At the head of this kernel image is a routine that does some minimal amount of hardware setup and then decompresses the kernel contained within the kernel image and places it into high memory. If an initial RAM disk image is present, this routine moves it into memory and notes it for later use. The routine then calls the kernel and the kernel boot begins.​
+
+    When the bzImage (for an i386 image) is invoked, you begin at ./arch/i386/boot/head.S in the start assembly routine. This routine does some basic hardware setup and invokes the startup_32 routine in ./arch/i386/boot/compressed/head.S. This routine sets up a basic environment (stack, etc.) and clears the Block Started by Symbol (BSS). The kernel is then decompressed through a call to a C function called decompress_kernel (located in./arch/i386/boot/compressed/misc.c).  ​
+
+    When the kernel is decompressed into memory, it is called. This is yet another startup_32 function, but this function is in ./arch/i386/kernel/head.S.​
+
+    In the new startup_32 function (also called the swapper or process 0), the page tables are initialized and memory paging is enabled. The type of CPU is detected along with any optional floating-point unit (FPU) and stored away for later use. The start_kernel function is then invoked (init/main.c), which takes you to the non-architecture specific Linux kernel. This is, in essence, the main function for the Linux kernel. ​
+
+    With the call to start_kernel, a long list of initialization functions are called to set up interrupts, perform further memory configuration, and load the initial RAM disk. In the end, a call is made to kernel_thread to start the init function, which is the first user-space process. Finally, the idle task is started and the scheduler can now take control (after the call to cpu_idle). With interrupts enabled, the pre-emptive scheduler periodically takes control to provide multitasking.​
+
+
+#################################PRogram Flow
+    you begin at ./arch/i386/boot/head.S in the start assembly routine. ​
+
+Invokes the "startup_32" routine in​
+
+ ./arch/i386/boot/compressed/head.S. This routine sets up a basic environment (stack, etc.) .​
+
+ "decompress_kernel" (located in./arch/i386/boot/compressed/misc.c).   ​
+
+    When the kernel is decompressed  calls ./arch/i386/kernel/head.S. ​
+
+    In the new startup_32 function (also called the swapper or process 0),​
+
+    The page tables are initialized​
+
+     and memory paging is enabled.​
+
+     The type of CPU is detected .​
+
+     The start_kernel function is then invoked (init/main.c), which takes you to the non-architecture specific Linux kernel. This is, in essence, the main function for the Linux kernel.  ​
+
+    With the call to start_kernel​
+
+     set up interrupts,​
+
+     perform further memory configuration,​
+
+     load the initial RAM disk. ​
+
+     a call is made to kernel_thread to start the init function, ​
+
+    which is the first user-space process. ​
+
+
+
+
+###############################RUNLEVEL
+    Please note that there are also symbolic links available for these directory under /etc directly. So, /etc/rc0.d is linked to /etc/rc.d/rc0.d.​
+
+    Under the /etc/rc.d/rc*.d/ directories, you would see programs that start with S and K.​
+
+    Programs starts with S are used during startup. S for startup.​
+
+    Programs starts with K are used during shutdown. K for kill.​
+
+    There are numbers right next to S and K in the program names. Those are the sequence number in which the programs should be started or killed.​
+
+    For example, S12syslog is to start the syslog deamon, which has the sequence number of 12. S80sendmail is to start the sendmail daemon, which has the sequence number of 80. So, syslog program will be started before sendmail.​
+
+   
+
+
+
+
+
+
+
+
+

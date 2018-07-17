@@ -1,0 +1,161 @@
+important links
+http://xillybus.com/tutorials/device-tree-zynq-1
+
+
+DTS
+	
+	DTS --> source
+	DTB --> binary Blob
+	/proc/device-tree --> runtime
+	
+	DTC is used to compile Source
+	dtc -I dts -O dtb -o /path/to/my-tree.dtb /path/to/my-tree.dts
+
+
+	Device tree node is used while probeing and loading the device
+
+	xillybus_0: xillybus@50000000 {
+	compatible = "xlnx,xillybus-1.00.a";
+	reg = < 0x50000000 0x1000 >;
+	interrupts = < 0 59 1 >;
+	interrupt-parent = <&gic>;
+	xlnx,max-burst-len = <0x10>;
+	xlnx,native-data-width = <0x20>;
+	xlnx,slv-awidth = <0x20>;
+	xlnx,slv-dwidth = <0x20>;
+	xlnx,use-wstrb = <0x1>;
+	} ;
+
+	above mentioned node is checked while inserting the 
+		platform_driver_register(&xillybus_platform_driver) ;
+	the struct of_device_id contains the "comaptible" string
+	which will be matched and loaded the apropriate probe function mentioned while registering platform device driver.
+
+	Refer the Documentation/devicetree/bindings/  for check the node structure and parameters required for that node
+
+	Linux uses DT data for three major purposes:
+	1) platform identification,
+	2) runtime configuration, and
+	3) device population.
+
+
+Node 
+	compatible = "string" --> first is manufacturer, second is model
+	#adress_cells --> number of adress fields in the reg for node.
+	#size_cells   --> number of size fields in reg
+	reg  <0xAdress 0xlength> this is the register adress for perticular device added in DT as node depends on adress cell
+		and Size cell      
+	ranges = <child address, parent address, and the size of the region in the child address space>
+	Interrupts
+		
+		interrupt-controller
+		#interrupt-cells
+		interrupt-parent
+		interrupts
+	PINS
+	   pin-controller
+	   pins
+	   function
+	   group
+		Documentation/devicetree/bindings/pinctrl/pinctrl-bindings.txt
+child node
+	String property
+	String property list
+	Byte Property 
+	uint Property
+Cpus
+Aliases
+
+https://developer.toradex.com/device-tree-customization
+Device tree compilation and edit
+if you want to build the device tree in kernel source 
+dont compile with dtc 
+
+use 
+	$ make dtbs ARCH=? CROSS_COMPILE=?
+
+edit the Device tree
+
+####Overwriting properties
+	To overwrite a property, the node needs to be referenced using the ampersand character and the label. Later device tree entries overwrite earlier entries (the sequence order of entries is what matters, hence the include order matters). Typically the higher layers (e.g. carrier board device tree) overwrite the lower layers (e.g. SoC device tree) since the higher layers include the lower layers at the very beginning.
+	&usbdev0 {
+	    dr_mode = "host";
+	};
+
+####Activating/Deactivating Devices
+	&uart4 {
+	    status = "okay";
+	};
+
+####Overwriting nodes
+latter definitions overwrite earlier definitions.
+
+####Delete properties or nodes
+using /delete-property/ or /delete-node/.
+	&uart1 {
+	    /delete-property/fsl,uart-has-rtscts;
+	};
+
+To delete a node, use its name, e.g.
+	/delete-node/backlight;
+
+Steps to submit patch in open source community
+
+Linux Device Driver basic and character driver
+For compilation 
+$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C /home/ganesh/raspberryPI/linux/ M=/home/ganesh/raspberryPI/linux/drivers/char/xillybus/ modules
+
+For adding the Driver in the kernel 
+we need to create the Kconfig and Makefile for perticular driver files and in the directory 
+
+e.g : we have created on hello.ko using two source files main.c and text.c
+	we have created the Makefile in drivers/character/xillybus
+
+	For enabling it from menuconfig 
+	select Drivers/Character/Xillybus [M]
+and build again 
+
+
+CHAR DEVICE DRIVER 
+
+dev_t = 32 bit number [12Major, 20Minor]
+MAJOR(dev_t dev);
+MINOR(dev_t dev);
+to get the Major and Minor numbers from the dev_t value.
+
+dev_t device = MKDEV(int major, int minor);
+to craete the dev_t number using minor and major nums
+
+struct file_operations
+{
+	.owner
+	All fuction pointer to "read write open release ioctl flush mmap lseek"
+	
+}
+
+
+int register_chrdev(unsigned int major, const char *name,struct file_operations *fops)
+
+
+
+
+
+IOCTL
+If you are adding new ioctl's to the kernel, you should use the _IO
+macros defined in <linux/ioctl.h>:
+
+    _IO    an ioctl with no parameters
+    _IOW   an ioctl with write parameters (copy_from_user)
+    _IOR   an ioctl with read parameters  (copy_to_user)
+    _IOWR  an ioctl with both write and read parameters.
+
+/*IOCTL from user space defined in the <sys/ioctl>
+int (*ioctl) (struct inode *inode, struct file *filp,unsigned int cmd, unsigned long arg);
+
+in kernel 4.X.X
+
+the ioctl is deprecated 
+	compat_ioctl 
+	unlocked_ioctl 
+is introduced 
+

@@ -1,0 +1,9 @@
+rtc-ds1307.c
+devm_request_threaded_irq
+	--> request_threaded_irq(irq, handler, thread_fn, irqflags, devname, dev_id);
+	        struct irqaction *action;
+	        struct irq_desc *desc;
+		
+		--> desc = irq_to_desc(irq);
+if not given default will be used...........
+handler = irq_default_primary_handler;

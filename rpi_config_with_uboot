@@ -1,0 +1,12 @@
+fatload mmc 0 ${kernel_addr_r} amit/zImage
+fatload mmc 0 0x2000000 amit/bcm2710-rpi-3-b-plus.dtb
+setenv bootargs console=ttyS0,115200n8 console=ttyAMA0,115200n8 console=tty0 root=/dev/mmcblk0p2 rootwait rw earlyprintk
+bootz ${kernel_addr_r} - 0x2000000
+Kernel image @ 0x080000 [ 0x000000 - 0x482b28 ]
+
+
+
+
+
+
+
